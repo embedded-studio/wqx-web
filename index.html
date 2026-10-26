@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>wqx emulator</title>
+<meta name="description" content="A clean-room emulator of the GGV 文曲星 handhelds (NC1020, NC2000, NC2600, NC3000, PC1000, CC800 and variants) running in the browser.">
+<link rel="stylesheet" href="style.css">
+<script type="module" src="app.js"></script>
+</head>
+<body>
+<header class="top">
+  <h1>wqx</h1>
+  <span class="sub">文曲星 emulator</span>
+  <span class="spacer"></span>
+  <button id="close" class="small" hidden title="Stop and choose other images">Other images</button>
+</header>
+
+<main>
+  <section id="setup">
+    <div id="drop" class="drop">
+      <p class="lead">Choose or drop the image files of one machine.</p>
+      <p><code>NAME.nor</code> is needed. Add <code>NAME.rom</code> (NC1020, PC1000 and CC800), or
+        <code>NAME.nand0</code> and <code>NAME.nand</code> (NC2000, NC2600 and NC3000), as the model has them.
+        The older models PC505, PC506 and PC530 need <code>NAME.rom</code> alone.</p>
+      <label class="button primary">Choose files…
+        <input type="file" id="files" multiple accept=".nor,.rom,.nand,.nand0,.bin" hidden>
+      </label>
+      <p class="note">The files are read in this browser and never uploaded. The page does not include any firmware.</p>
+    </div>
+
+    <div id="chosen" class="panel" hidden>
+      <h2>Image set <span id="set-name"></span></h2>
+      <p id="set-files" class="files"></p>
+      <div class="options">
+        <label>Model
+          <select id="opt-model">
+            <option value="">detect</option>
+            <option>nc1020</option><option>nc1020tw</option><option>cc880</option>
+            <option>nc2000</option><option>nc2000tw</option><option>nc2600</option>
+            <option>nc3000</option><option>tc1000s</option><option>tc808</option>
+            <option>pc1000</option><option>cc800</option><option>pc1000a</option><option>pc1000b</option>
+            <option>pc505</option><option>pc506</option><option>pc530</option><option>nc360</option>
+          </select>
+        </label>
+        <label>Simulator mode
+          <select id="opt-sim">
+            <option value="-1">detect</option>
+            <option value="1">on</option>
+            <option value="0">off</option>
+          </select>
+        </label>
+        <label class="check"><input type="checkbox" id="opt-remember" checked> Remember these files in this browser</label>
+      </div>
+      <p class="note" id="copro-note" hidden>NC3000 sound: the co-processor's program is read from the NAND
+        (<code>/sysdir/升级061.bin</code>). A copy of that file, chosen with the images, is used instead.
+        The TC808 has none: choose an NC3000's or TC1000S's copy with its images for speech.</p>
+      <button id="start" class="primary">Start</button>
+    </div>
+
+    <div id="recent" class="panel" hidden>
+      <h2>Remembered image sets</h2>
+      <ul id="recent-list" class="list"></ul>
+    </div>
+
+    <p id="setup-error" class="error" role="alert"></p>
+  </section>
+
+  <section id="machine" hidden>
+    <div class="device">
+      <div class="lcd-frame">
+        <canvas id="lcd" width="189" height="80" aria-label="LCD"></canvas>
+      </div>
+      <div id="status" class="status" aria-live="polite"></div>
+      <div class="toolbar">
+        <button id="pause" class="small">Pause</button>
+        <button id="reset" class="small" title="Reset the machine (the reset button)">Reset</button>
+        <button id="mute" class="small">Mute</button>
+        <label class="small-label">Speed
+          <select id="speed">
+            <option value="1">1×</option>
+            <option value="2">2×</option>
+            <option value="4">4×</option>
+            <option value="16">16×</option>
+          </select>
+        </label>
+        <button id="save-state" class="small">Save state</button>
+        <label class="small-label" title="Show the LCD's column 0 as pixels instead of the status icons">
+          <input type="checkbox" id="raw-lcd"> Raw LCD</label>
+      </div>
+      <p id="message" class="message" role="alert"></p>
+      <div id="keypad" class="keypad"></div>
+    </div>
+
+    <details id="states-panel" class="panel">
+      <summary>Save states</summary>
+      <ul id="state-list" class="list"></ul>
+      <p>
+        <button id="download-state" class="small">Download the current state</button>
+        <label class="button small">Load a state file…
+          <input type="file" id="state-file" accept=".wqxstate,application/octet-stream" hidden>
+        </label>
+      </p>
+      <p class="note">A state includes the machine, its NOR and the NAND blocks that differ from the
+        image files. A save state of the terminal port (<code>--save-state FILE</code>, the file
+        without <code>.nor</code> and <code>.nand</code>) loads too; the flash then stays as it is.</p>
+    </details>
+
+    <details class="panel">
+      <summary>Flash memory</summary>
+      <p id="flash-status"></p>
+      <p>
+        <button id="download-nor" class="small">Download NOR</button>
+        <button id="download-nand" class="small">Download NAND</button>
+        <button id="revert-flash" class="small danger">Back to the image files</button>
+      </p>
+      <p class="note">What the machine writes to its NOR and NAND is kept in this browser for this image
+        set, never in the image files. The downloads are complete image files with the changes.</p>
+    </details>
+
+    <details class="panel">
+      <summary>PC keys</summary>
+      <table id="key-help" class="keys"></table>
+      <p class="note">Some browsers keep F5, F11 or F12 for themselves; use the Alt keys or the keypad.
+        Emulation pauses while the page is hidden.</p>
+    </details>
+  </section>
+</main>
+</body>
+</html>
